@@ -8,19 +8,26 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+//import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 
 /**
  * Created by stevegal on 2019-03-25.
  */
+
+@ExtendWith(MockitoExtension.class)
 public class TestResultVisitorTest {
 
-    private BuildDataCreateRequest mockBuidDataCreateRequest;
-    private TestResultVisitor sut;
+    private BuildDataCreateRequest mockBuidDataCreateRequest = Mockito.mock(BuildDataCreateRequest.class);
+    private TestResultVisitor sut = Mockito.mock(TestResultVisitor.class);
 
     private CucumberJsonReport cucumberTestReport;
     private MochaJsSpecReport mochaTestReport;

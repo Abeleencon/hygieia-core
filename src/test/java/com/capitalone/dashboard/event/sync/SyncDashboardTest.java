@@ -145,9 +145,10 @@ public class SyncDashboardTest {
         relatedCollectorItemRepository.deleteAll();
         Optional<Build> build = buildRepository.findById(new ObjectId("5ba520c40be2d3f98f795054"));
 
-        syncDashboard().sync(build.get());
+        if (build.isPresent()) {
+            syncDashboard().sync(build.get());
+        }
         List<RelatedCollectorItem> relatedCollectorItems = Lists.newArrayList(relatedCollectorItemRepository.findAll());
-
         assertTrue(relatedCollectorItems.size() == 0);
 
     }
@@ -157,7 +158,9 @@ public class SyncDashboardTest {
         relatedCollectorItemRepository.deleteAll();
         Optional<Build> build = buildRepository.findById(new ObjectId("5ba520c40be2d3f98f795055"));
 
-        syncDashboard().sync(build.get());
+        if (build.isPresent()) {
+            syncDashboard().sync(build.get());
+        }
         List<RelatedCollectorItem> relatedCollectorItems = Lists.newArrayList(relatedCollectorItemRepository.findAll());
         assertTrue(relatedCollectorItems.size() == 0);
     }
@@ -169,7 +172,9 @@ public class SyncDashboardTest {
         collectorRepository.deleteAll(scmCollectors);
         Optional<Build> build = buildRepository.findById(new ObjectId("5ba520c40be2d3f98f795055"));
 
-        syncDashboard().sync(build.get());
+        if (build.isPresent()) {
+            syncDashboard().sync(build.get());
+        }
         List<RelatedCollectorItem> relatedCollectorItems = Lists.newArrayList(relatedCollectorItemRepository.findAll());
         assertTrue(relatedCollectorItems.size() == 0);
     }
@@ -181,7 +186,9 @@ public class SyncDashboardTest {
         Optional<CodeQuality> codeQuality = codeQualityRepository.findById(new ObjectId("5ba98d055de4b1195307bf5a"));
 
         Optional<Build> build = buildRepository.findById(new ObjectId("5ba520c40be2d3f98f795054"));
-        syncDashboard().sync(build.get());
+        if (build.isPresent()) {
+            syncDashboard().sync(build.get());
+        }
         // now sync code quality
         syncDashboard().sync(codeQuality.get());
 
@@ -197,15 +204,19 @@ public class SyncDashboardTest {
         relatedCollectorItemRepository.deleteAll();
         Optional<CodeQuality> codeQuality = codeQualityRepository.findById(new ObjectId("5ba98d055de4b1195307bf5a"));
         Optional<Dashboard> testSubject = dashboardRepository.findById(new ObjectId("5baa458b0be2d337e3885815"));
-        Widget widget = syncDashboard().getWidget("codeanalysis", testSubject.get());
-        assertTrue(widget == null);
-
+        if (testSubject.isPresent()) {
+            Widget widget = syncDashboard().getWidget("codeanalysis", testSubject.get());
+            assertTrue(widget == null);
+        }
         Optional<Build> build = buildRepository.findById(new ObjectId("5ba520c40be2d3f98f795054"));
         // sync build
-        syncDashboard().sync(build.get());
+        if (build.isPresent()) {
+            syncDashboard().sync(build.get());
+        }
         // now sync code quality
-        syncDashboard().sync(codeQuality.get());
-
+        if (codeQuality.isPresent()) {
+            syncDashboard().sync(codeQuality.get());
+        }
         relatedCollectorItemRepository.findAll().forEach( r -> {
             try {
                 syncDashboard().sync(r,true);
@@ -215,13 +226,14 @@ public class SyncDashboardTest {
 
 
         testSubject = dashboardRepository.findById(new ObjectId("5baa458b0be2d337e3885815"));
-        widget = syncDashboard().getWidget("codeanalysis", testSubject.get());
-        assertTrue(widget != null);
+        if (testSubject.isPresent()) {
+            Widget widget = syncDashboard().getWidget("codeanalysis", testSubject.get());
+            assertTrue(widget != null);
 
-        Optional<Component> component = componentRepository.findById(widget.getComponentId());
-        assertTrue(component != null);
-        CollectorItem si = component.get().getCollectorItems(CollectorType.CodeQuality).get(0);
-
+            Optional<Component> component = componentRepository.findById(widget.getComponentId());
+            assertTrue(component != null);
+            CollectorItem si = component.get().getCollectorItems(CollectorType.CodeQuality).get(0);
+        }
 
     }
 }

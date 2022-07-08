@@ -2,6 +2,7 @@ package com.capitalone.dashboard.repository;
 
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -53,7 +54,7 @@ public class CollectorTaskTests {
         when(baseCollectorRepository.save(any(Collector.class))).thenReturn(c);
         task.run();
 
-        assertThat(c.getLastExecuted(), greaterThan(prevLastExecuted));
+        assertEquals(c.getLastExecuted(), greaterThan(prevLastExecuted));
         verify(baseCollectorRepository, times(1)).save(c);
     }
 
@@ -75,7 +76,7 @@ public class CollectorTaskTests {
         when(baseCollectorRepository.findByName(COLLECTOR_NAME)).thenReturn(c);
         task.onStartup();
 
-        assertThat(c.isOnline(), is(true));
+        assertEquals(c.isOnline(), is(true));
         verify(baseCollectorRepository, times(1)).save(c);
         verify(taskScheduler).schedule(any(TestCollectorTask.class), any(CronTrigger.class));
     }
@@ -88,7 +89,7 @@ public class CollectorTaskTests {
 
         task.onShutdown();
 
-        assertThat(c.isOnline(), is(false));
+        assertEquals(c.isOnline(), is(false));
         verify(baseCollectorRepository, times(1)).save(c);
     }
 

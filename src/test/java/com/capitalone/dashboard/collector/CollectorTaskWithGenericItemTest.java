@@ -14,6 +14,7 @@ import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -37,12 +38,15 @@ public class CollectorTaskWithGenericItemTest<TestCollectorTaskTwoWithGenericIte
 
 
     @Autowired
+    @Mock
     private CollectorItemRepository collectorItemRepository;
 
     @Autowired
+    @Mock
     private GenericCollectorItemRepository genericCollectorItemRepository;
 
     @Autowired
+    @Mock
     RelatedCollectorItemRepository relatedCollectorItemRepository;
 
     @Autowired

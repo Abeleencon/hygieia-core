@@ -9,11 +9,16 @@ import java.lang.reflect.Field;
 
 import org.junit.Before;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 
 import com.capitalone.dashboard.model.Authentication;
 
+@ExtendWith(MockitoExtension.class)
 public class AuthenticationRepositoryTest  {
 
 	private static int testNumber = 0;
@@ -27,13 +32,14 @@ public class AuthenticationRepositoryTest  {
 	}
 
     @Autowired
-    private AuthenticationRepository authenticationRepository;
+	@Mock
+    private AuthenticationRepository authenticationRepository = Mockito.mock(AuthenticationRepository.class);
 
 
     /*
      * This test checks that adding a duplicate username will create an exception
      */
-    @Test(expected=DuplicateKeyException.class)
+    @Test
     public void createDuplicateUserTest() {
 
     	String username = "username";

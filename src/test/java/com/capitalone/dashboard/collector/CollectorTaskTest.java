@@ -22,7 +22,7 @@ public class CollectorTaskTest {
     @Mock private TaskScheduler taskScheduler;
 
     private static final String COLLECTOR_NAME = "Test Collector";
-    private CollectorTask<Collector> collector;
+    @Mock private CollectorTask<Collector> collector;
 
     @Before
     public void init() {

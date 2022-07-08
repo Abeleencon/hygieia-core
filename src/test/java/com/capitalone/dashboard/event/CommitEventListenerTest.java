@@ -20,8 +20,11 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 
 import com.capitalone.dashboard.model.Application;
@@ -49,6 +52,7 @@ import com.capitalone.dashboard.repository.PipelineRepository;
 
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class CommitEventListenerTest {
 
     
@@ -62,7 +66,7 @@ public class CommitEventListenerTest {
 
     private PipelineRepository pipelineRepository = Mockito.mock(PipelineRepository.class);
 
-    @InjectMocks
+    @Mock
     private CommitEventListener eventListener;
 
     private static final boolean HAS_BUILD_COLLECTOR = true;
