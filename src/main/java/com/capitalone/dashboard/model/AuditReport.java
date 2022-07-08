@@ -23,6 +23,10 @@ public class AuditReport extends BaseModel {
     private String sourceIdentifier;
     private String testResultsUrl;
     private EvaluationStatus evaluationStatus;
+    private long lastRefreshTimestamp;
+    private long entryTimestamp;
+    private long refreshEndTimestamp;
+    private String imageId;
 
     public AuditReport() { }
 
@@ -158,5 +162,37 @@ public class AuditReport extends BaseModel {
 
     public void setEvaluationStatus(EvaluationStatus evaluationStatus) {
         this.evaluationStatus = evaluationStatus;
+    }
+
+    public long getLastRefreshTimestamp() {
+        return lastRefreshTimestamp;
+    }
+
+    public void setLastRefreshTimestamp(long lastRefreshTimestamp) {
+        this.lastRefreshTimestamp = lastRefreshTimestamp;
+    }
+
+    public long getEntryTimestamp() {
+        return entryTimestamp;
+    }
+
+    public void setEntryTimestamp(long entryTimestamp) {
+        this.entryTimestamp = entryTimestamp;
+    }
+
+    public long getRefreshEndTimestamp() {
+        return refreshEndTimestamp;
+    }
+
+    public void setRefreshEndTimestamp(long refreshEndTimestamp) {
+        this.refreshEndTimestamp = refreshEndTimestamp;
+    }
+
+    public String getImageId() {
+        return imageId;
+    }
+
+    public void setImageId(String imageId) {
+        this.imageId = imageId;
     }
 }

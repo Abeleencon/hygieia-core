@@ -1,16 +1,13 @@
 package com.capitalone.dashboard.config;
 
 import com.capitalone.dashboard.repository.RepositoryPackage;
-import com.mongodb.Block;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.connection.ConnectionPoolSettings;
-import com.mongodb.connection.SslSettings;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
+import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
-import com.mongodb.TransactionOptions;
-
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,14 +17,10 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static com.mongodb.assertions.Assertions.notNull;
 
 @Component
 @EnableMongoRepositories(basePackageClasses = RepositoryPackage.class)
@@ -54,6 +47,8 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
 	private int dbConnectTimeout;
 	@Value("${dbsockettimeout:900000}")
 	private int dbSocketTimeout;
+	@Value("${sslInvalidHostNameAllowed:false}")
+	private String sslInvalidHostNameAllowed;
 
 	@Override
 	protected String getDatabaseName() {
@@ -65,24 +60,7 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
 	public MongoClient mongoClient() {
 
 		MongoClient client;
-		LOGGER.info("ReplicaSet" + dbreplicaset);
-
-		// MongoClientOptions.Builder builder = new MongoClientOptions.Builder();
-		// MongoClientSettings.Builder builder = MongoClientSettings.builder();
-//        SslSettings.Builder sslBuilder = SslSettings.builder();
-//        sslBuilder.enabled(Boolean.parseBoolean(dbssl));
-//        ConnectionPoolSettings.Builder cpsBuilder = ConnectionPoolSettings.builder();
-//        cpsBuilder.maxConnectionIdleTime(60000, TimeUnit.MILLISECONDS);
-//
-//        builder.applyToSslSettings( notNull("block", block).apply(sslBuilder));
-//        builder..maxConnectionIdleTime(60000);
-//
-//        builder.serverSelectionTimeout(30000);          // MongoDB default 30 seconds
-//        builder.connectTimeout(dbConnectTimeout);       // MongoDB default varies, may be 10 seconds
-//        builder.socketTimeout(dbSocketTimeout);         // MongoDB default is 0, means no timeout
-
-		// MongoClientSettings opts = builder.build();
-
+		LOGGER.info("ReplicaSet: " + dbreplicaset);
 		if (Boolean.parseBoolean(dbreplicaset)) {
 			List<ServerAddress> serverAddressList = new ArrayList<>();
 			for (String h : hostport) {
@@ -91,37 +69,17 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
 				ServerAddress serverAddress = new ServerAddress(myHost, myPort);
 				serverAddressList.add(serverAddress);
 			}
-
 			for (ServerAddress s : serverAddressList) {
 				LOGGER.info("Initializing Mongo Client server ReplicaSet at: {}", s);
 			}
-
 			if (StringUtils.isEmpty(userName)) {
+				LOGGER.info("Initializing Mongo Client server ReplicaSet as true at: {} with creds as empty" + serverAddressList);
 				client = MongoClients.create(MongoClientSettings.builder()
-						.applyToSslSettings(builder -> builder.enabled(false))
 						.applyToClusterSettings(builder -> builder.hosts(serverAddressList))
-						.applyToSocketSettings(
-								builder -> builder.connectTimeout(dbSocketTimeout, TimeUnit.MILLISECONDS))
-						.applyToConnectionPoolSettings(
-								builder -> builder.maxConnectionLifeTime(dbConnectTimeout, TimeUnit.MILLISECONDS))
-						.applyToConnectionPoolSettings(
-								builder -> builder.maxConnectionIdleTime(60000, TimeUnit.MILLISECONDS))
 						.build());
 			} else {
-				MongoCredential mongoCredential = MongoCredential.createScramSha1Credential(userName, databaseName,
-						password.toCharArray());
-				// client = new MongoClients(serverAddressList,
-				// Collections.singletonList(mongoCredential), opts);
-				client = MongoClients.create(MongoClientSettings.builder().credential(mongoCredential)
-						.applyToSslSettings(builder -> builder.enabled(false))
-						.applyToClusterSettings(builder -> builder.hosts(serverAddressList))
-						.applyToSocketSettings(
-								builder -> builder.connectTimeout(dbSocketTimeout, TimeUnit.MILLISECONDS))
-						.applyToConnectionPoolSettings(
-								builder -> builder.maxConnectionLifeTime(dbConnectTimeout, TimeUnit.MILLISECONDS))
-						.applyToConnectionPoolSettings(
-								builder -> builder.maxConnectionIdleTime(60000, TimeUnit.MILLISECONDS))
-						.build());
+				LOGGER.info("Initializing Mongo Client server ReplicaSet as true at: {} with creds" + serverAddressList);
+				client = getMongoClient(serverAddressList);
 			}
 		} else {
 			ServerAddress serverAddr = new ServerAddress(host, port);
@@ -129,30 +87,38 @@ public class MongoConfig extends AbstractMongoClientConfiguration {
 			List<ServerAddress> addresses = new ArrayList<ServerAddress>();
 			addresses.add(serverAddr);
 			if (StringUtils.isEmpty(userName)) {
-
-				// client =
-				// MongoClients.create(MongoClientSettings.builder().applyToClusterSettings(block)
 				client = MongoClients.create(MongoClientSettings.builder()
 						.applyToClusterSettings(builder -> builder.hosts(addresses)).build());
 			} else {
-				MongoCredential mongoCredential = MongoCredential.createScramSha1Credential(userName, databaseName,
-						password.toCharArray());
-				// client = new MongoClient(serverAddr,
-				// Collections.singletonList(mongoCredential), opts);
-				client = MongoClients.create(MongoClientSettings.builder().credential(mongoCredential)
-						.applyToSslSettings(builder -> builder.enabled(false))
-						.applyToClusterSettings(builder -> builder.hosts(addresses))
-						.applyToSocketSettings(
-								builder -> builder.connectTimeout(dbSocketTimeout, TimeUnit.MILLISECONDS))
-						.applyToConnectionPoolSettings(
-								builder -> builder.maxConnectionLifeTime(dbConnectTimeout, TimeUnit.MILLISECONDS))
-						.applyToConnectionPoolSettings(
-								builder -> builder.maxConnectionIdleTime(60000, TimeUnit.MILLISECONDS))
-						.build());
+				client = getMongoClient(addresses);
 			}
-
 		}
 		LOGGER.info("Connecting to Mongo: {}", client);
+		return client;
+	}
+
+	private MongoClient getMongoClient(List<ServerAddress> hostList) {
+		MongoClient client;
+		MongoCredential mongoCredential = MongoCredential.createScramSha1Credential(userName, databaseName,
+				password.toCharArray());
+		MongoClientSettings mongoClientSettings = MongoClientSettings.builder().credential(mongoCredential)
+				.applyToClusterSettings(builder -> builder.hosts(hostList))
+				.applyToConnectionPoolSettings(builder -> builder.maxConnectionIdleTime(60000, TimeUnit.MILLISECONDS))
+				.applyToSslSettings(builder -> {
+					builder.enabled(Boolean.parseBoolean(dbssl));
+					builder.invalidHostNameAllowed(Boolean.parseBoolean(sslInvalidHostNameAllowed));
+				})
+				.applyToSocketSettings(builder -> {
+					builder.connectTimeout(dbConnectTimeout, TimeUnit.MILLISECONDS);
+					builder.readTimeout(dbSocketTimeout, TimeUnit.MILLISECONDS);
+				})
+				.readPreference(ReadPreference.secondaryPreferred())
+				.retryWrites(false)
+				.applyToClusterSettings(builder -> builder.serverSelectionTimeout(30000, TimeUnit.MILLISECONDS))
+				.build();
+		client = MongoClients.create(mongoClientSettings);
+		LOGGER.info("Initializing Mongo Client server ReplicaSet as true at: {} with creds" + hostList + " : Cluster Settings = " + mongoClientSettings.getClusterSettings() +
+				" SSL Settings = " + mongoClientSettings.getSslSettings() + " ConnectionPool Settings = " + mongoClientSettings.getConnectionPoolSettings() + " Socket Settings = " + mongoClientSettings.getSocketSettings());
 		return client;
 	}
 
